@@ -1,0 +1,50 @@
+{
+  "id": "E142",
+  "slug": "eng-adc-quantization-noise",
+  "title": "ADC 양자화 오차 계산기",
+  "title_en": "ADC Quantization Noise Calculator",
+  "category": "전자·변환기",
+  "category_en": "Electronics and converters",
+  "fields": [
+    {
+      "key": "bits",
+      "label": "ADC 비트 수 N",
+      "label_en": "ADC resolution N",
+      "dimension": "ratio",
+      "example": 12,
+      "constraint": "integer",
+      "display_unit": "1",
+      "display_value": "12"
+    },
+    {
+      "key": "span",
+      "label": "입력 전압 범위의 전체 폭 V_FS",
+      "label_en": "Full input voltage span V_FS",
+      "dimension": "voltage",
+      "example": 2,
+      "constraint": "positive",
+      "display_unit": "V",
+      "display_value": "2"
+    }
+  ],
+  "result_label": "양자화 오차 실효전압 e_rms",
+  "result_label_en": "RMS quantization error e_rms",
+  "result_dimension": "voltage",
+  "formula": "q = V_FS/2ᴺ; e_rms = q/√12",
+  "purpose": "이상적인 N비트 균일 양자화기의 전체 입력 범위에서 양자화 오차의 실효값 계산.",
+  "purpose_en": "Calculate ideal RMS quantization error for a uniform N-bit quantizer across its full input voltage span.",
+  "assumptions": "입력 범위의 전체 폭을 사용합니다. 예를 들어 −1 V~+1 V는 2 V입니다. 반올림 양자화 오차가 −q/2~+q/2에 균일하고 신호와 비상관이라고 가정합니다. 과입력·DNL·INL·열잡음은 제외하며, 일정한 입력이나 동기화된 신호에서는 균일 오차 모델이 성립하지 않을 수 있습니다. 결과는 측정 ADC의 총잡음이 아닙니다.",
+  "assumptions_en": "Required: the full voltage span, for example 2 V for −1 V to +1 V. The ideal rounding error is uniform over −q/2 to +q/2 and uncorrelated with the signal. A constant or coherently sampled input can violate that distribution. Excluded: overload, DNL, INL and thermal noise. The output is ideal quantization error rather than the measured total noise of an ADC.",
+  "sources": [
+    {
+      "label": "Analog Devices — MT-001, ideal quantization error",
+      "url": "https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf"
+    }
+  ],
+  "condition": "전체 입력 전압 폭과 균일·비상관 오차 가정을 확인했습니다.",
+  "condition_en": "I have checked the full input span and the uniform, uncorrelated error assumption.",
+  "output_unit": "uV",
+  "site": "https://nanalab.kr/eng-adc-quantization-noise/",
+  "repository": "https://github.com/NaNaCompany/eng-adc-quantization-noise",
+  "groups": []
+}

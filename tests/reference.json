@@ -1,0 +1,44 @@
+{
+  "id": "E142",
+  "value": 0.00014095465556387347,
+  "method": "Independent Python Decimal evaluation at 90 decimal digits; mathematical constants supplied to at least 85 digits. Expected numbers rounded once to IEEE-754 binary64. No JS imports.",
+  "cases": [
+    {
+      "name": "one-bit ideal uniform quantizer",
+      "values": {
+        "bits": 1,
+        "span": 2
+      },
+      "expected": 0.28867513459481287
+    },
+    {
+      "name": "additional bit halves RMS error",
+      "values": {
+        "bits": 13
+      },
+      "expected": 7.047732778193673e-05
+    },
+    {
+      "name": "64-bit theoretical quantizer",
+      "values": {
+        "bits": 64,
+        "span": 10
+      },
+      "expected": 1.5649110403512075e-19
+    },
+    {
+      "name": "fractional bit count rejected",
+      "values": {
+        "bits": 12.5
+      },
+      "throws": true
+    },
+    {
+      "name": "nonzero error below floating point range",
+      "values": {
+        "bits": 4096
+      },
+      "throws": true
+    }
+  ]
+}
