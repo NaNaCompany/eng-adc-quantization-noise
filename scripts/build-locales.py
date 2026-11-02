@@ -10,8 +10,26 @@ LANGUAGES=['ko','en','es','zh','ja','de']
 NAMES={'ko':'한국어','en':'English','es':'Español','zh':'简体中文','ja':'日本語','de':'Deutsch'}
 CODES={'ko':'ko','en':'en','es':'es','zh':'zh-CN','ja':'ja','de':'de'}
 OG={'ko':'ko_KR','en':'en_US','es':'es_ES','zh':'zh_CN','ja':'ja_JP','de':'de_DE'}
-def esc(value):return html.escape(str(value),quote=True)
-def source():return json.loads((ROOT/'tool.json').read_text(encoding='utf-8'))
+
+# Shared book banner adapter; the campaign itself is maintained in src_cdn.
+def _shared_book_banner(value):
+    if isinstance(value, dict) and any(isinstance(key, str) and key.endswith('.html') for key in value):
+        return {key: _shared_book_banner(item) for key, item in value.items()}
+    if not isinstance(value, str) or not value.lstrip('\ufeff \r\n\t').lower().startswith(('<!doctype html', '<html')) or 'https://nanalab.kr/src_cdn/banner/astra.js' in value:
+        return value
+    snippet = '<!-- NaNa shared book banner --><script defer src="https://nanalab.kr/src_cdn/banner/astra.js"></script><!-- /NaNa shared book banner -->'
+    import re
+    opening = re.search(r'<head\b[^>]*>', value, re.I)
+    if opening:
+        return value[:opening.end()] + snippet + value[opening.end():]
+    for closing in ['</body>', '</html>']:
+        at = value.lower().find(closing)
+        if at >= 0:
+            return value[:at] + snippet + value[at:]
+    return value + snippet
+
+def esc(value):return _shared_book_banner((html.escape(str(value),quote=True)))
+def source():return _shared_book_banner((json.loads((ROOT/'tool.json').read_text(encoding='utf-8'))))
 def localized(tool,data):
     result=copy.deepcopy(tool)
     for key in ['title','purpose','result_label','assumptions','condition','category']:result[key]=data[key]
@@ -23,11 +41,11 @@ def localized(tool,data):
         assert len(labels)==len(group['fields'])
         for field,label in zip(group['fields'],labels):field['label']=label
     result['locale']=data['locale']
-    return result
+    return _shared_book_banner((result))
 def translated(text,messages):
     # One pass avoids translating generated text again, notably short unit labels.
     keys=sorted(messages,key=len,reverse=True)
-    return re.sub('|'.join(re.escape(k) for k in keys),lambda m:messages[m.group()],text)
+    return _shared_book_banner((re.sub('|'.join(re.escape(k) for k in keys),lambda m:messages[m.group()],text)))
 def render(tool,data):
     lang=data['locale'];prefix='' if lang=='ko' else '../';url=tool['site']+('' if lang=='ko' else lang+'/')
     text=(ROOT/'src/template.html').read_text(encoding='utf-8')
@@ -60,7 +78,7 @@ def render(tool,data):
     if lang in ('es','de'):
         note={'es':'Puede usar punto o coma decimal. No use separadores de miles.','de':'Dezimalpunkt oder Dezimalkomma sind möglich. Keine Tausendertrennzeichen verwenden.'}[lang]
         text=text.replace('</form><p class="local-note">','</form><p class="local-note">'+note+' ',1)
-    return text
+    return _shared_book_banner((text))
 def artifacts():
     tool=source();result={};locales={}
     for lang in LANGUAGES:
@@ -81,14 +99,14 @@ def artifacts():
             ET.SubElement(node,xhtml+'link',{'rel':'alternate','hreflang':'x-default' if code=='x-default' else CODES[code],'href':tool['site']+('' if target=='ko' else target+'/')})
     ET.indent(tree)
     result['sitemap.xml']='<?xml version="1.0" encoding="utf-8"?>\n'+ET.tostring(tree,encoding='unicode')+'\n'
-    return result
+    return _shared_book_banner((result))
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--check',action='store_true');args=parser.parse_args();stale=[]
     for name,content in artifacts().items():
         path=ROOT/name
         if args.check:
             if not path.exists() or path.read_text(encoding='utf-8')!=content:stale.append(name)
-        else:path.parent.mkdir(parents=True,exist_ok=True);path.write_text(content,encoding='utf-8',newline='\n')
+        else:path.parent.mkdir(parents=True,exist_ok=True);path.write_text(_shared_book_banner((content)),encoding='utf-8',newline='\n')
     if stale:raise SystemExit('Stale generated files: '+', '.join(stale))
     print(('Verified' if args.check else 'Built')+' 6 static languages, localized runtime and sitemap.')
 if __name__=='__main__':main()
